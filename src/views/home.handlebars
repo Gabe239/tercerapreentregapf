@@ -1,0 +1,30 @@
+<div>
+  {{#if user}}
+  <h1>Lista de productos y bienvenido, {{user.first_name}} {{user.last_name}}!</h1>
+
+  {{#if products}}
+  <ul>
+    {{#each products}}
+    <li>
+      <p>Title: {{this.title}}</p>
+      <p>Description: {{this.description}}</p>
+      <p>Price: {{this.price}}</p>
+      <p>Thumbnail: {{this.thumbnail}}</p>
+      <p>Code: {{this.code}}</p>
+      <p>Stock: {{this.stock}}</p>
+      <p>Category: {{category}}</p>
+      <p>Availability: {{availability}}</p>
+      <p>Id: {{this._id}}</p>
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p>No hay productos disponibles.</p>
+  {{/if}}
+  {{else}}
+  <p>Por favor, ingrese <a href="/login">aquí</a> para acceder con su usuario ya registrado.</p> 
+  <p>¿No estás registrado? <a href="/register">Regístrate aquí</a></p>
+  {{/if}}
+
+  <a href="/api/sessions/logout"><button>Logout</button></a>
+</div>
