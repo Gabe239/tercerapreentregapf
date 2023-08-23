@@ -7,24 +7,6 @@ class ProductManager {
 
   async addProduct(title, description, price, thumbnail, code, stock, category, availability) {
     try {
-      if (!title || !description || !price || !thumbnail || !code || !stock || !category || !availability) {
-        throw new Error('Faltan datos para completar la adición del producto');
-      }
-
-      if (
-        typeof title !== 'string' ||
-        typeof description !== 'string' ||
-        typeof thumbnail !== 'string' ||
-        typeof price !== 'number' ||
-        typeof code !== 'string' ||
-        typeof stock !== 'number' ||
-        typeof category !== 'string' ||
-        typeof availability !== 'string'
-      ) {
-        throw new Error(
-          'Los datos proporcionados no son válidos para la adición del producto'
-        );
-      }
 
       const existingProduct = await Product.findOne({ code }).lean();
       if (existingProduct) {

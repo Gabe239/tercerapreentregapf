@@ -75,29 +75,40 @@ export const getProductById = async (req, res) => {
       }
 };
 
-export const addProduct = async (req, res) => {
-    const newProduct = req.body;
+const validateProductData = (productData) => {
+  const { title, description, price, thumbnail, code, stock, category, availability } = productData;
 
-    try {
-      await productManager.addProduct(
-        newProduct.title,
-        newProduct.description,
-        newProduct.price,
-        newProduct.thumbnail,
-        newProduct.code,
-        newProduct.stock,
-        newProduct.category,
-        newProduct.availability,
-      );
-  
-      io.emit("product-added", newProduct);
-  
-      return res.status(201).json(newProduct);
-    } catch (error) {
-      return res.status(500).json({ error: 'Error al agregar el producto' });
-    }
+  if (!title || !description || !price || !thumbnail || !code || !stock || !category || !availability) {
+    throw new Error('Faltan datos para completar la adición del producto');
+  }
+
+  if (
+    typeof title !== 'string' ||
+    typeof description !== 'string' ||
+    typeof thumbnail !== 'string' ||
+    typeof price !== 'number' ||
+    typeof code !== 'string' ||
+    typeof stock !== 'number' ||
+    typeof category !== 'string' ||
+    typeof availability !== 'string'
+  ) {
+    throw new Error('Los datos proporcionados no son válidos para la adición del producto');
+  }
 };
 
+export const addProduct = async (req, res) => {
+  const newProduct = req.body;
+
+  try {
+    validateProductData(newProduct);
+
+    await productManager.addProduct(newProduct);
+    io.emit('product-added', newProduct);
+    return res.status(201).json(newProduct);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error al agregar el producto' });
+  }
+};
 export const updateProduct = async (req, res) => {
     try {
         const productId = req.params.pid;
