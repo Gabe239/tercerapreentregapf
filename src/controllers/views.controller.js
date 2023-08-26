@@ -1,9 +1,10 @@
-import ProductManager from '../dao/managers/ProductManagerDb.js';
-import CartManager from '../dao/managers/CartManagerDb.js';
+import productsRepository from '../repositories/index.js';
+import cartsRepository from '../repositories/index.js';
+
 import UserDTO from '../dto/user.dto.js';
 
-const productManager = new ProductManager();
-const cartManager = new CartManager();
+const productManager = productsRepository.productsRepository;
+const cartManager = cartsRepository.cartsRepository;
 
 export const renderHome = async (req, res) => {
   try {
@@ -66,19 +67,31 @@ export const renderProductsPage = async (req, res) => {
 };
 
 export const addToCart = async (req, res) => {
-  const productId = req.params.productId;
-
   try {
-    const product = await productManager.getProductById(productId);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
+    const productId = req.body.productId;
+    const user = req.session.user;
+    // Get the user's cart
+    //console.log("Session user:", user);
+   
+    //if (!user || !user.cart) {
+    //  console.log("User or cart is missing");
+    //}
+    
+    if (!user.cart) {
+      // Create a new cart if the user doesn't have one
+      let userCart = await cartManager.createCart();
+    
+      // Initialize the user's cart field
+      user.cart = { _id: userCart._id };
+      await req.session.save();
+    } else if (!user.cart._id) {
+      // Set the cart's ID to the user's cart field
+      let userCart = await cartManager.createCart();
+      user.cart._id = userCart._id;
+      await req.session.save();
     }
-
-    const cart = await cartManager.createCart();
-    await cartManager.addProductToCart(cart._id, productId);
-
-    console.log(cart);
-
+    await cartManager.addProductToCart(user.cart._id, productId);
+     
     return res.status(200).json({ message: 'Product added to cart successfully' });
   } catch (error) {
     console.error('Error adding product to cart:', error);

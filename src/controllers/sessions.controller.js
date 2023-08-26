@@ -20,7 +20,6 @@ export const registerUser = (req, res, next) => {
 export const loginUser = (req, res) => {
   const user = req.user;
 
-  // Set user role based on email (you can update this logic)
   user.role = user.email === 'adminCoder@coder.com' ? 'admin' : 'user';
 
   req.session.user = {

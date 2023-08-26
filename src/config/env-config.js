@@ -7,5 +7,5 @@ export default {
     mongoUrl: process.env.MONGO_URL,
     clientId: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    persistense:  process.env.PERSISTENSE,
+    persistence:  process.env.PERSISTENCE,
 }

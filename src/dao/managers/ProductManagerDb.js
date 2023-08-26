@@ -88,7 +88,7 @@ class ProductManager {
 
   async updateProduct(title, description, price, thumbnail, code, stock, category, availability, id) {
     try {
-      const product = await Product.findById(id).lean();
+      const product = await Product.findById(id);
       if (!product) {
         throw new Error('Producto no encontrado');
       }

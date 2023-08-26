@@ -1,7 +1,9 @@
-import CartManager from '../dao/managers/CartManagerDb.js';
+import cartsRepository from '../repositories/index.js';
+import productsRepository from '../repositories/index.js';
 import Ticket from '../dao/models/ticketModel.js';
 
-const cartManager = new CartManager();
+const cartManager = cartsRepository.cartsRepository;
+const productManager = productsRepository.productsRepository;
 
 export const createCart = async (req, res) => {
   try {
@@ -29,16 +31,15 @@ export const getCartById = async (req, res) => {
 
 export const addProductToCart = async (req, res) => {
   try {
-    const cartId = req.params.cid;
-    const productId = req.params.pid;
-
-    const updatedProducts = await cartManager.addProductToCart(cartId, productId);
-    return res.status(200).json(updatedProducts);
-  } catch (error) {
-    return res.status(500).json({ error: 'Error al agregar el producto al carrito' });
-  }
+      const cartId = req.params.cid;
+      const productId = req.params.pid;
+  
+      const updatedProducts = await cartManager.addProductToCart(cartId, productId);
+      return res.status(200).json(updatedProducts);
+    } catch (error) {
+      return res.status(500).json({ error: 'Error al agregar el producto al carrito' });
+    }
 };
-
 export const removeProductFromCart = async (req, res) => {
   try {
     const cartId = req.params.cid;
@@ -96,43 +97,45 @@ export const purchaseCart = async (req, res) => {
       return res.status(404).json({ error: 'Carrito no encontrado' });
     }
 
-    const productsToPurchase = cart.products;
-
+    let totalAmount = 0;
+    const productsToPurchase = [];
     const failedProducts = [];
 
-    for (const productData of productsToPurchase) {
+    for (const productData of cart.products) {
       const product = await productManager.getProductById(productData.product);
 
       if (product && product.stock >= productData.quantity) {
+        const productAmount = productData.quantity * product.price;
+
+        totalAmount += productAmount;
+
+        productsToPurchase.push({
+          product: productData.product,
+          quantity: productData.quantity,
+          price: product.price,
+          amount: productAmount,
+        });
 
         product.stock -= productData.quantity;
-        await product.save();
+        await productManager.updateProduct(product.title, product.description, product.price, product.thumbnail, product.code, product.stock, product.category, product.availability, product._id);
 
-        cart.products = cart.products.filter(p => p.product.toString() !== product._id.toString());
       } else {
-
         failedProducts.push(productData.product);
       }
     }
 
-
-    if (cart.products.length > 0) {
-      const totalAmount = productsToPurchase.reduce((total, p) => total + p.quantity * p.price, 0);
-
+    if (productsToPurchase.length > 0) {
       const ticket = new Ticket({
         code: generateUniqueCode(),
         purchase_datetime: new Date(),
         amount: totalAmount,
-        purchaser: req.session.user.email,
-        products: productsToPurchase.filter(p => !failedProducts.includes(p.product)),
+        purchaser: 'dsdsadas',
+        
       });
 
       await ticket.save();
 
-      cart.products = cart.products.filter(p => failedProducts.includes(p.product));
-      await cart.save();
-
-      return res.status(200).json({ message: 'Compra realizada con éxito', failedProducts });
+      return res.status(200).json({ message: 'Compra realizada con éxito', failedProducts, ticket });
     } else {
       return res.status(400).json({ error: 'No se pudo realizar la compra' });
     }

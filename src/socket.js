@@ -1,5 +1,5 @@
 import { Server } from 'socket.io';
-import { getMessages, addMessage } from './dao/managers/messageManagerDb.js';
+import messagesRepository from './repositories/index.js';
 
 
 
@@ -11,8 +11,8 @@ export function configureSocket(server) {
 
     socket.on('message', async (data) => {
       try {
-        const newMessage = await addMessage(data.user, data.message);
-        io.emit('messageLogs', await getMessages());
+        const newMessage = await messagesRepository.addMessage(data.user, data.message);
+        io.emit('messageLogs', await messagesRepository.getMessages());
       } catch (error) {
         console.error('Error saving message:', error);
       }

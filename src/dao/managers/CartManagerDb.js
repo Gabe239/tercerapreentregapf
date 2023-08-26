@@ -65,7 +65,7 @@ class CartManager {
       }
 
       await cart.save();
-
+      
       return cart.products;
     } catch (err) {
       throw new Error('Error adding product to cart');

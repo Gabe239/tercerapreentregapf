@@ -1,7 +1,7 @@
-import { productsRepository } from '../repositories/index.js';
+import productsRepository from '../repositories/index.js';
 import { io } from '../app.js';
 
-const productManager = productsRepository
+const productManager = productsRepository.productsRepository;
 
 export const getProducts = async (req, res) => {
     try {
@@ -109,6 +109,7 @@ export const addProduct = async (req, res) => {
     return res.status(500).json({ error: 'Error al agregar el producto' });
   }
 };
+
 export const updateProduct = async (req, res) => {
     try {
         const productId = req.params.pid;
