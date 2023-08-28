@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const collection = 'carts'
 
 const cartSchema = new mongoose.Schema({
+  email: { type: String, required: false },
   products: [
     {
       product: {
@@ -18,7 +19,6 @@ const cartSchema = new mongoose.Schema({
     },
   ],
 });
-
 
 const cartModel = mongoose.model(collection, cartSchema);
 

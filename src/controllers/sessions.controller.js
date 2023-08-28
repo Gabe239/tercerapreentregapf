@@ -17,20 +17,33 @@ export const registerUser = (req, res, next) => {
   })(req, res, next);
 };
 
-export const loginUser = (req, res) => {
-  const user = req.user;
+export const loginUser = (req, res, next) => {
+  passport.authenticate('local-login', (err, user, info) => {
+    if (err) {
+      return res.status(500).json({ error: 'An error occurred' });
+    }
+    if (!user) {
+      return res.status(400).json({ error: info.message });
+    }
 
-  user.role = user.email === 'adminCoder@coder.com' ? 'admin' : 'user';
+    req.login(user, (err) => {
+      if (err) {
+        return next(err);
+      }
 
-  req.session.user = {
-    first_name: user.first_name,
-    last_name: user.last_name,
-    email: user.email,
-    age: user.age,
-    role: user.role,
-  };
+      user.role = user.email === 'adminCoder@coder.com' ? 'admin' : 'user';
 
-  res.send({ status: "success", payload: user, message: "First login successful! :)" });
+      req.session.user = {
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        age: user.age,
+        role: user.role,
+      };
+
+      return res.json({ status: "success", payload: user, message: "First login successful! :)" });
+    });
+  })(req, res, next);
 };
 
 export const logoutUser = (req, res) => {

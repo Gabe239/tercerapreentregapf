@@ -31,14 +31,14 @@ export const getCartById = async (req, res) => {
 
 export const addProductToCart = async (req, res) => {
   try {
-      const cartId = req.params.cid;
-      const productId = req.params.pid;
-  
-      const updatedProducts = await cartManager.addProductToCart(cartId, productId);
-      return res.status(200).json(updatedProducts);
-    } catch (error) {
-      return res.status(500).json({ error: 'Error al agregar el producto al carrito' });
-    }
+    const cartId = req.params.cid;
+    const productId = req.params.pid;
+
+    const updatedProducts = await cartManager.addProductToCart(cartId, productId);
+    return res.status(200).json(updatedProducts);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error al agregar el producto al carrito' });
+  }
 };
 export const removeProductFromCart = async (req, res) => {
   try {
@@ -90,6 +90,8 @@ export const clearCart = async (req, res) => {
 
 export const purchaseCart = async (req, res) => {
   try {
+
+
     const cartId = req.params.cid;
     const cart = await cartManager.getCartById(cartId);
 
@@ -129,12 +131,18 @@ export const purchaseCart = async (req, res) => {
         code: generateUniqueCode(),
         purchase_datetime: new Date(),
         amount: totalAmount,
-        purchaser: 'dsdsadas',
-        
+        purchaser: cart.email,
+
       });
 
       await ticket.save();
+      // Filter out the failed products from the cart's products
+      const productsNotPurchased = cart.products.filter(productData =>
+        failedProducts.includes(productData.product)
+      );
 
+      // Update the cart with products that were not purchased
+      await cartManager.updateCartProducts(cartId, productsNotPurchased);
       return res.status(200).json({ message: 'Compra realizada con éxito', failedProducts, ticket });
     } else {
       return res.status(400).json({ error: 'No se pudo realizar la compra' });

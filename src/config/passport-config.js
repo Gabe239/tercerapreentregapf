@@ -12,7 +12,6 @@ const initializePassport = () => {
         scope: 'user: email',
     }, async (accessToken, refreshToken, profile, done) => {
         try {
-            console.log({ profile })
             let user = await userModel.findOne({ email: profile._json.email });
             if (user) return done(null, user);
             const newUser = {

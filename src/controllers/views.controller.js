@@ -8,23 +8,22 @@ const cartManager = cartsRepository.cartsRepository;
 
 export const renderHome = async (req, res) => {
   try {
-      const products = await productManager.getProducts();
-      const user = req.session.user;
-
-      if (!user) {
-          return res.render('home', {
-              user: null,
-              products: products,
-          });
-      }
-
-      res.render('home', {
-          user: new UserDTO(user),
-          products: products,
+    const products = await productManager.getProducts();
+    const user = req.session.user;
+    if (!user) {
+      return res.render('home', {
+        user: null,
+        products: products,
       });
+    }
+
+    res.render('home', {
+      user: new UserDTO(user),
+      products: products,
+    });
   } catch (error) {
-      console.error('Error fetching products:', error);
-      res.status(500).send('Error fetching products');
+    console.error('Error fetching products:', error);
+    res.status(500).send('Error fetching products');
   }
 };
 
@@ -70,34 +69,38 @@ export const addToCart = async (req, res) => {
   try {
     const productId = req.body.productId;
     const user = req.session.user;
-    // Get the user's cart
-    //console.log("Session user:", user);
-   
-    //if (!user || !user.cart) {
-    //  console.log("User or cart is missing");
-    //}
-    
+  
     if (!user.cart) {
-      // Create a new cart if the user doesn't have one
-      let userCart = await cartManager.createCart();
-    
-      // Initialize the user's cart field
-      user.cart = { _id: userCart._id };
-      await req.session.save();
-    } else if (!user.cart._id) {
-      // Set the cart's ID to the user's cart field
-      let userCart = await cartManager.createCart();
-      user.cart._id = userCart._id;
+      let userCart = await cartManager.createCartEmail(user.email);
+      user.cart = userCart;
       await req.session.save();
     }
-    await cartManager.addProductToCart(user.cart._id, productId);
-     
+    else {
+      const cartTest = await cartManager.getCartById(user.cart._id);
+
+      if (!cartTest) {
+        // Create a new cart if the cart doesn't exist
+        let userCart = await cartManager.createCartEmail(user.email);
+        user.cart = userCart;
+        await req.session.save();
+      }
+    }
+
+    console.log(user.cart);
+
+
+    const products = await cartManager.addProductToCart(user.cart._id, productId);
+    
+    user.cart.products = products;
+    await req.session.save();
+    console.log(user);
     return res.status(200).json({ message: 'Product added to cart successfully' });
   } catch (error) {
     console.error('Error adding product to cart:', error);
     return res.status(500).json({ error: 'Error adding product to cart' });
   }
 };
+
 
 export const renderCart = async (req, res) => {
   try {

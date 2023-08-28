@@ -27,12 +27,30 @@ class CartManager {
   async createCart() {
     try {
       const newCart = {
+        email: '',
         products: []
       };
       const cart = new Cart(newCart);
-      
+
       await cart.save();
-    
+
+      return cart;
+    } catch (err) {
+      console.error('Error creating cart:', err);
+      throw new Error('Error creating cart');
+    }
+  }
+
+  async createCartEmail(email) {
+    try {
+      const newCart = {
+        email: email,
+        products: []
+      };
+      const cart = new Cart(newCart);
+
+      await cart.save();
+
       return cart;
     } catch (err) {
       console.error('Error creating cart:', err);
@@ -50,28 +68,56 @@ class CartManager {
   }
   async addProductToCart(cartId, productId) {
     try {
-      const cart = await Cart.findOneAndUpdate(
-        { _id: cartId },
-        { $inc: { 'products.$[elem].quantity': 1 } },
-        { arrayFilters: [{ 'elem.product': productId }], new: true }
-      ).populate('products.product');
-
+      const cart = await Cart.findById(cartId);
       if (!cart) {
         throw new Error('Cart not found');
       }
 
-      if (!cart.products || cart.products.length === 0) {
-        cart.products = [{ product: productId, quantity: 1 }];
-      }
+      // Find the index of the product in the cart's products array
+      const productIndex = cart.products.findIndex(productData => productData.product.toString() === productId);
 
+      if (productIndex !== -1) {
+        // If the product already exists, update its quantity
+        cart.products[productIndex].quantity += 1;
+      } else {
+        // If the product doesn't exist, add it to the cart with quantity 1
+        cart.products.push({ product: productId, quantity: 1 });
+      }
       await cart.save();
-      
+
       return cart.products;
     } catch (err) {
       throw new Error('Error adding product to cart');
     }
   }
 
+  async addProductToCartAndEmail(cartId, productId, email) {
+    try {
+      const cart = await Cart.findById(cartId);
+      console.log(cart);
+      if (!cart) {
+        throw new Error('Cart not found');
+      }
+      cart= ({email: email});
+      // Find the index of the product in the cart's products array
+      const productIndex = cart.products.findIndex(productData => productData.product.toString() === productId);
+
+      if (productIndex !== -1) {
+        // If the product already exists, update its quantity
+        cart.products[productIndex].quantity += 1;
+      } else {
+        // If the product doesn't exist, add it to the cart with quantity 1
+        cart.products.push({ product: productId, quantity: 1 });
+      }
+
+      console.log(cart);
+      await cart.save();
+
+      return cart.products;
+    } catch (err) {
+      throw new Error('Error adding product to cart');
+    }
+  }
 
   async removeProductFromCart(cartId, productId) {
     try {
@@ -124,6 +170,31 @@ class CartManager {
       throw new Error('Error al vaciar el carrito');
     }
   }
+
+  async findCartByEmail(email) {
+    try {
+      const cart = await Cart.findOne({ email: email }).populate('products.product');
+      return cart;
+    } catch (err) {
+      throw new Error('Error al encontrar el carrito');
+    }
+  }
+
+  async updateCartEmail(cartId, email) {
+    try {
+      console.log('Updating cart email:', cartId, email);
+      const cart = await Cart.findOneAndUpdate(
+        { _id: cartId },
+        { email: email },
+        { new: true }
+      );
+      console.log('Updated cart:', cart); // Add this log
+      return cart;
+    } catch (err) {
+      throw new Error('Error updating cart email');
+    }
+  }
 }
+
 
 export default CartManager;
